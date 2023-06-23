@@ -50,8 +50,31 @@ export type Solang = {
       args: []
     },
     {
+      name: "increment"
+      accounts: [
+        {
+          name: "dataAccount"
+          isMut: true
+          isSigner: false
+          isOptional: false
+        }
+      ]
+      args: []
+    },
+    {
+      name: "flip_and_increment"
+      accounts: [
+        {
+          name: "dataAccount"
+          isMut: true
+          isSigner: false
+          isOptional: false
+        }
+      ]
+      args: []
+    },
+    {
       name: "get"
-      docs: ["notice: Simply returns the current value of our `bool`."]
       accounts: [
         {
           name: "dataAccount"
@@ -64,8 +87,20 @@ export type Solang = {
       returns: "bool"
     }
   ]
+  events: [
+    {
+      name: "Flipped"
+      fields: [
+        {
+          name: "newValue"
+          type: "bool"
+          index: false
+        }
+      ]
+    }
+  ]
   metadata: {
-    address: "5jkbKtTNFF5crf3ASmVkAuZQGT7WAuLdumrzUCH3MscG"
+    address: "7FWiaEs5nGW8hnHcnFNoNkZGEXLiHHzh29fZZLzEBqsh"
   }
 }
 
@@ -121,8 +156,31 @@ export const IDL: Solang = {
       args: [],
     },
     {
+      name: "increment",
+      accounts: [
+        {
+          name: "dataAccount",
+          isMut: true,
+          isSigner: false,
+          isOptional: false,
+        },
+      ],
+      args: [],
+    },
+    {
+      name: "flip_and_increment",
+      accounts: [
+        {
+          name: "dataAccount",
+          isMut: true,
+          isSigner: false,
+          isOptional: false,
+        },
+      ],
+      args: [],
+    },
+    {
       name: "get",
-      docs: ["notice: Simply returns the current value of our `bool`."],
       accounts: [
         {
           name: "dataAccount",
@@ -135,7 +193,19 @@ export const IDL: Solang = {
       returns: "bool",
     },
   ],
+  events: [
+    {
+      name: "Flipped",
+      fields: [
+        {
+          name: "newValue",
+          type: "bool",
+          index: false,
+        },
+      ],
+    },
+  ],
   metadata: {
-    address: "5jkbKtTNFF5crf3ASmVkAuZQGT7WAuLdumrzUCH3MscG",
+    address: "7FWiaEs5nGW8hnHcnFNoNkZGEXLiHHzh29fZZLzEBqsh",
   },
 }

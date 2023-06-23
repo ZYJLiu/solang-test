@@ -1,14 +1,14 @@
 [features]
 seeds = false
 skip-lint = false
-[programs.localnet]
-solang = "5jkbKtTNFF5crf3ASmVkAuZQGT7WAuLdumrzUCH3MscG"
+[programs.devnet]
+solang = "7FWiaEs5nGW8hnHcnFNoNkZGEXLiHHzh29fZZLzEBqsh"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "localnet"
+cluster = "devnet"
 wallet = "/home/johnliu/.config/solana/id.json"
 
 [scripts]

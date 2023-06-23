@@ -1,46 +1,49 @@
 import { Button, Text, VStack } from "@chakra-ui/react"
-import { PublicKey } from "@solana/web3.js"
+import { AccountInfo, PublicKey } from "@solana/web3.js"
 import { useConnection, useWallet } from "@solana/wallet-adapter-react"
 import { solangProgram as program } from "@/utils/setup"
 import { useEffect, useState } from "react"
 
+// Fetch the account state
 export default function FetchState() {
   const { publicKey } = useWallet()
   const { connection } = useConnection()
-  const [state, setState] = useState("")
-  const [buffer, setBuffer] = useState(new Uint8Array())
+  const [bool, setBool] = useState("")
+  const [number, setNumber] = useState(0)
+  const [address, setAddress] = useState("")
+  const [buffer, setBuffer] = useState("")
 
   useEffect(() => {
     if (!publicKey) return
+
     const [pda, bump] = PublicKey.findProgramAddressSync(
       [Buffer.from("seed"), publicKey.toBuffer()],
       program.programId
     )
-    connection.getAccountInfo(pda).then((accountInfo) => {
+
+    const updateState = (accountInfo: AccountInfo<Buffer>) => {
+      const dataBuffer = accountInfo.data.buffer
+      const dataView = new DataView(dataBuffer)
+      const uint8Array = new Uint8Array(dataBuffer)
+
+      console.log(accountInfo.data)
+      setBool(dataView.getUint8(17) === 1 ? "True" : "False")
+      setNumber(dataView.getUint8(20))
+      setAddress(new PublicKey(uint8Array.slice(24)).toBase58())
+      setBuffer(Array.from(accountInfo.data).join(", "))
+    }
+
+    const fetchAccountData = async () => {
+      const accountInfo = await connection.getAccountInfo(pda)
       if (accountInfo) {
-        console.log(accountInfo.data)
-        setState(accountInfo.data[16] === 1 ? "True" : "False")
-        setBuffer(accountInfo.data)
+        updateState(accountInfo)
       }
-    })
-  }, [publicKey])
-
-  useEffect(() => {
-    if (!publicKey) return
-
-    const [pda, bump] = PublicKey.findProgramAddressSync(
-      [Buffer.from("seed"), publicKey.toBuffer()],
-      program.programId
-    )
+    }
 
     // Subscribe to the games state PDA account change
-    const subscriptionId = connection.onAccountChange(pda, (accountInfo) => {
-      if (accountInfo) {
-        console.log(accountInfo.data)
-        setState(accountInfo.data[16] === 1 ? "True" : "False")
-        setBuffer(accountInfo.data)
-      }
-    })
+    const subscriptionId = connection.onAccountChange(pda, updateState)
+
+    fetchAccountData()
 
     return () => {
       // Unsubscribe from the account change subscription when the component unmounts
@@ -79,7 +82,9 @@ export default function FetchState() {
   // return <Button onClick={onClick}>Fetch</Button>
   return (
     <VStack>
-      <Text>{state}</Text>
+      <Text>{bool}</Text>
+      <Text>{number}</Text>
+      <Text>{address}</Text>
       <Text>{buffer}</Text>
     </VStack>
   )

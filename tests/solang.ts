@@ -12,36 +12,51 @@ describe("solang", () => {
 
   const program = anchor.workspace.Solang as Program<Solang>
 
-  it("Is initialized!", async () => {
-    let [pda, bump] = await PublicKey.findProgramAddressSync(
-      [Buffer.from("seed"), wallet.publicKey.toBuffer()],
-      program.programId
-    )
+  const [pda, bump] = PublicKey.findProgramAddressSync(
+    [Buffer.from("seed"), wallet.publicKey.toBuffer()],
+    program.programId
+  )
 
+  it("Is initialized!", async () => {
     const tx = await program.methods
       .new(wallet.publicKey, Array.from(Buffer.from([bump])))
       .accounts({ dataAccount: pda })
       .rpc({ skipPreflight: true })
     console.log("Your transaction signature", tx)
 
-    const val1 = await program.methods
+    const val = await program.methods
       .get()
       .accounts({ dataAccount: pda })
       .view()
 
-    console.log("state", val1)
+    console.log("state", val)
+  })
 
-    const tx2 = await program.methods
-      .flip()
+  it("Flip", async () => {
+    const tx = await program.methods.flip().accounts({ dataAccount: pda }).rpc()
+    console.log("Your transaction signature", tx)
+
+    const val = await program.methods
+      .get()
+      .accounts({ dataAccount: pda })
+      .view()
+
+    console.log("state", val)
+  })
+
+  it("Increment", async () => {
+    const tx = await program.methods
+      .increment()
       .accounts({ dataAccount: pda })
       .rpc()
-    console.log("Your transaction signature", tx2)
+    console.log("Your transaction signature", tx)
+  })
 
-    const val2 = await program.methods
-      .get()
+  it("Flip and Increment", async () => {
+    const tx = await program.methods
+      .flipAndIncrement()
       .accounts({ dataAccount: pda })
-      .view()
-
-    console.log("state", val2)
+      .rpc()
+    console.log("Your transaction signature", tx)
   })
 })

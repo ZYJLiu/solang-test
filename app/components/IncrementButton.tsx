@@ -4,7 +4,7 @@ import { useConnection, useWallet } from "@solana/wallet-adapter-react"
 import { solangProgram as program } from "@/utils/setup"
 
 // Update account state
-export default function FlipButton() {
+export default function IncrementButton() {
   const { publicKey, sendTransaction } = useWallet()
   const { connection } = useConnection()
 
@@ -17,12 +17,12 @@ export default function FlipButton() {
     )
 
     const transaction = await program.methods
-      .flip()
+      .increment()
       .accounts({ dataAccount: pda })
       .transaction()
 
     sendTransaction(transaction, connection)
   }
 
-  return <Button onClick={onClick}>Flip</Button>
+  return <Button onClick={onClick}>Increment</Button>
 }

@@ -3,6 +3,7 @@ import { PublicKey } from "@solana/web3.js"
 import { useConnection, useWallet } from "@solana/wallet-adapter-react"
 import { solangProgram as program } from "@/utils/setup"
 
+// Create new account
 export default function NewButton() {
   const { publicKey, sendTransaction } = useWallet()
   const { connection } = useConnection()
