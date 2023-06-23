@@ -1,7 +1,7 @@
 import * as anchor from "@coral-xyz/anchor"
 import { Program } from "@coral-xyz/anchor"
 import { Solang } from "../target/types/solang"
-import { PublicKey } from "@solana/web3.js"
+import { PublicKey, AccountMeta } from "@solana/web3.js"
 
 describe("solang", () => {
   // Configure the client to use the local cluster.
@@ -56,6 +56,42 @@ describe("solang", () => {
     const tx = await program.methods
       .flipAndIncrement()
       .accounts({ dataAccount: pda })
+      .rpc()
+    console.log("Your transaction signature", tx)
+  })
+
+  it("CPI Increment Anchor Counter ", async () => {
+    const counterProgramId = new PublicKey(
+      "ALeaCzuJpZpoCgTxMjJbNjREVqSwuvYFRZUfc151AKHU"
+    )
+
+    const [counterAccount] = anchor.web3.PublicKey.findProgramAddressSync(
+      [Buffer.from("counter")],
+      counterProgramId
+    )
+
+    const remainingAccounts: AccountMeta[] = [
+      {
+        pubkey: counterProgramId,
+        isWritable: false,
+        isSigner: false,
+      },
+      {
+        pubkey: counterAccount,
+        isWritable: true,
+        isSigner: false,
+      },
+      {
+        pubkey: wallet.publicKey,
+        isWritable: true,
+        isSigner: true,
+      },
+    ]
+
+    const tx = await program.methods
+      .cpi(counterAccount, wallet.publicKey)
+      .accounts({ dataAccount: pda })
+      .remainingAccounts(remainingAccounts)
       .rpc()
     console.log("Your transaction signature", tx)
   })

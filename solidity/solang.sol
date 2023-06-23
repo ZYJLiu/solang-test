@@ -1,5 +1,7 @@
-@program_id("7FWiaEs5nGW8hnHcnFNoNkZGEXLiHHzh29fZZLzEBqsh")
+import "../utils/counter.sol";
+import "solana";
 
+@program_id("7FWiaEs5nGW8hnHcnFNoNkZGEXLiHHzh29fZZLzEBqsh")
 contract solang {
     bool private isInitialzed;
     bool private value = true;
@@ -44,6 +46,14 @@ contract solang {
 
     function get() public view returns (bool) {
         return value;
+    }
+
+    function cpi(address c, address u) public  {
+        AccountMeta[2] am = [
+            AccountMeta({pubkey: c, is_writable: true, is_signer: false}),
+            AccountMeta({pubkey: u, is_writable: true, is_signer: true})
+        ];
+        counter.increment{accounts: am}();
     }
 }
 
