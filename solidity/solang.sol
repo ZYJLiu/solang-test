@@ -1,4 +1,5 @@
 import "../utils/counter.sol";
+import "../utils/spl_token.sol";
 import "solana";
 
 @program_id("7FWiaEs5nGW8hnHcnFNoNkZGEXLiHHzh29fZZLzEBqsh")
@@ -48,12 +49,17 @@ contract solang {
         return value;
     }
 
-    function cpi(address c, address u) public  {
-        AccountMeta[2] am = [
-            AccountMeta({pubkey: c, is_writable: true, is_signer: false}),
-            AccountMeta({pubkey: u, is_writable: true, is_signer: true})
+    function cpi(address counter_address, address user_address) public  {
+        AccountMeta[2] metas = [
+            AccountMeta({pubkey: counter_address, is_writable: true, is_signer: false}),
+            AccountMeta({pubkey: user_address, is_writable: true, is_signer: true})
         ];
-        counter.increment{accounts: am}();
+        counter.increment{accounts: metas}();
+    }
+
+    function spl_transfer(address from, address to) public  {
+        SplToken.TokenAccountData from_data = SplToken.get_token_account_data(from);
+        SplToken.transfer(from, to, from_data.owner, 1);
     }
 }
 

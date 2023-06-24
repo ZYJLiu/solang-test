@@ -1,15 +1,24 @@
 [features]
 seeds = false
 skip-lint = false
-[programs.devnet]
+[programs.localnet]
 solang = "7FWiaEs5nGW8hnHcnFNoNkZGEXLiHHzh29fZZLzEBqsh"
 
 [registry]
-url = "https://api.apr.dev"
+url = "https://api.apr.local"
 
 [provider]
-cluster = "devnet"
+cluster = "localnet"
 wallet = "/home/johnliu/.config/solana/id.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+
+[test.validator]
+url = "https://api.devnet.solana.com"
+
+[[test.validator.clone]]
+address = "ALeaCzuJpZpoCgTxMjJbNjREVqSwuvYFRZUfc151AKHU"
+
+[[test.validator.clone]]
+address = "Ao86vHqEfWNszG6NKFgWLbLipQ6b5XLAnwKGeyVBfQSJ"
