@@ -1,5 +1,6 @@
 import "../utils/counter.sol";
 import "../utils/spl_token.sol";
+import "../utils/system_instruction.sol";
 import "solana";
 
 @program_id("7FWiaEs5nGW8hnHcnFNoNkZGEXLiHHzh29fZZLzEBqsh")
@@ -49,10 +50,10 @@ contract solang {
         return value;
     }
 
-    function cpi(address counter_address, address user_address) public  {
+    function cpi(address counterAddress, address userAddress) public  {
         AccountMeta[2] metas = [
-            AccountMeta({pubkey: counter_address, is_writable: true, is_signer: false}),
-            AccountMeta({pubkey: user_address, is_writable: true, is_signer: true})
+            AccountMeta({pubkey: counterAddress, is_writable: true, is_signer: false}),
+            AccountMeta({pubkey: userAddress, is_writable: true, is_signer: true})
         ];
         counter.increment{accounts: metas}();
     }
@@ -60,6 +61,11 @@ contract solang {
     function spl_transfer(address from, address to) public  {
         SplToken.TokenAccountData from_data = SplToken.get_token_account_data(from);
         SplToken.transfer(from, to, from_data.owner, 1);
+    }
+
+    function initialize_mint(address payer, address mint, address mintAuthority, address freezeAuthority, uint8 decimals) public  {
+        SystemInstruction.create_account(payer, mint, 1461600, 82, address"TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
+        SplToken.initialize_mint(mint, mintAuthority, freezeAuthority, decimals);
     }
 }
 

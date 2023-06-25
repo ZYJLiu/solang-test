@@ -8,6 +8,9 @@ import {
   getOrCreateAssociatedTokenAccount,
   mintTo,
   TOKEN_PROGRAM_ID,
+  MINT_SIZE,
+  getMinimumBalanceForRentExemptMint,
+  getMint,
 } from "@solana/spl-token"
 
 describe("solang", () => {
@@ -164,5 +167,42 @@ describe("solang", () => {
 
     const tokenAccount = await getAccount(connection, to_token_account.address)
     console.log(tokenAccount.amount.toString())
+  })
+
+  it("Initialize Mint via CPI in program", async () => {
+    const mint = Keypair.generate()
+    const lamport = await getMinimumBalanceForRentExemptMint(connection)
+    console.log("Mint Account Space:", MINT_SIZE)
+    console.log("Mint Account Lamports:", lamport)
+
+    const remainingAccounts: AccountMeta[] = [
+      {
+        pubkey: mint.publicKey,
+        isWritable: true,
+        isSigner: true,
+      },
+      {
+        pubkey: wallet.publicKey,
+        isWritable: true,
+        isSigner: true,
+      },
+    ]
+
+    const tx = await program.methods
+      .initializeMint(
+        wallet.publicKey, // payer
+        mint.publicKey, // mint address to initialize
+        wallet.publicKey, // mint authority
+        wallet.publicKey, // freeze authority
+        9 // decimals
+      )
+      .accounts({ dataAccount: pda })
+      .remainingAccounts(remainingAccounts)
+      .signers([mint])
+      .rpc({ skipPreflight: true })
+    console.log("Your transaction signature", tx)
+
+    const mintAccount = await getMint(connection, mint.publicKey)
+    console.log(mintAccount)
   })
 })

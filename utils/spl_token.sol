@@ -7,6 +7,7 @@ import 'solana';
 
 library SplToken {
 	address constant tokenProgramId = address"TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
+
 	enum TokenInstruction {
 		InitializeMint, // 0
 		InitializeAccount, // 1
@@ -40,6 +41,31 @@ library SplToken {
 		Reallocate, // 29
 		MemoTransferExtension, // 30
 		CreateNativeMint // 31
+	}
+
+	struct InitializeMintInstruction {
+        uint8 instruction;
+        uint8 decimals;
+        address mintAuthority;
+        uint8 freezeAuthorityOption;
+        address freezeAuthority;
+    }
+
+	// https://github.com/solana-labs/solana-program-library/blob/master/token/program/src/instruction.rs#L799
+	function initialize_mint(address mint, address mintAuthority, address freezeAuthority, uint8 decimals) internal {
+    	InitializeMintInstruction instr = InitializeMintInstruction({
+            instruction: 20,
+            decimals: decimals,
+            mintAuthority: mintAuthority,
+            freezeAuthorityOption: 1,
+            freezeAuthority: freezeAuthority
+        });
+
+		AccountMeta[1] metas = [
+			AccountMeta({pubkey: mint, is_writable: true, is_signer: false})
+		];
+
+		tokenProgramId.call{accounts: metas}(instr);
 	}
 
 	/// Mint new tokens. The transaction should be signed by the mint authority keypair
@@ -208,7 +234,7 @@ library SplToken {
 
 		TokenAccountData data = TokenAccountData(
 			{
-				mintAccount: ai.data.readAddress(0), 
+				mintAccount: ai.data.readAddress(0),
 				owner: ai.data.readAddress(32),
 			 	balance: ai.data.readUint64LE(64),
 				delegate_present: ai.data.readUint32LE(72) > 0,
@@ -280,7 +306,7 @@ library SplToken {
 		data[0] = uint8(TokenInstruction.SetAuthority);
 		data[1] = uint8(AuthorityType.MintTokens);
 		data[3] = 0;
-		
+
 		tokenProgramId.call{accounts: metas}(data);
 	}
 }
