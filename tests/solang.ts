@@ -205,4 +205,46 @@ describe("solang", () => {
     const mintAccount = await getMint(connection, mint.publicKey)
     console.log(mintAccount)
   })
+
+  it("Initialize Mint via CPI in program using PDA", async () => {
+    const [mint, bump] = PublicKey.findProgramAddressSync(
+      [Buffer.from("mint")],
+      program.programId
+    )
+
+    const remainingAccounts: AccountMeta[] = [
+      {
+        pubkey: mint,
+        isWritable: true,
+        isSigner: false,
+      },
+      {
+        pubkey: wallet.publicKey,
+        isWritable: true,
+        isSigner: true,
+      },
+      {
+        pubkey: program.programId,
+        isWritable: false,
+        isSigner: false,
+      },
+    ]
+
+    const tx = await program.methods
+      .initializeMintPda(
+        wallet.publicKey, // payer
+        mint, // mint address to initialize
+        mint, // mint authority
+        mint, // freeze authority
+        2, // decimals
+        Buffer.from([bump])
+      )
+      .accounts({ dataAccount: pda })
+      .remainingAccounts(remainingAccounts)
+      .rpc({ skipPreflight: true })
+    console.log("Your transaction signature", tx)
+
+    const mintAccount = await getMint(connection, mint)
+    console.log(mintAccount)
+  })
 })

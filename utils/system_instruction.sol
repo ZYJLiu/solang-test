@@ -27,6 +27,17 @@ library SystemInstruction {
         UpgradeNonceAccount // This is not available on Solana v1.9.15
     }
 
+    function create_account_pda(address from, address to, uint64 lamports, uint64 space, address owner, bytes bump) internal {
+        AccountMeta[2] metas = [
+            AccountMeta({pubkey: from, is_signer: true, is_writable: true}),
+            AccountMeta({pubkey: to, is_signer: true, is_writable: true})
+        ];
+
+        bytes bincode = abi.encode(uint32(Instruction.CreateAccount), lamports, space, owner);
+
+        systemAddress.call{accounts: metas, seeds: [["mint", bump]]}(bincode);
+    }
+
     /// Create a new account on Solana
     ///
     /// @param from public key for the account from which to transfer lamports to the new account
@@ -58,7 +69,7 @@ library SystemInstruction {
         AccountMeta[3] metas = [
             AccountMeta({pubkey: from, is_signer: true, is_writable: true}),
             AccountMeta({pubkey: to, is_signer: false, is_writable: true}),
-            AccountMeta({pubkey: base, is_signer: true, is_writable: false})
+            AccountMeta({pubkey: base, is_signer: false, is_writable: false})
         ];
 
         uint32 buffer_size = 92 + seed.length;

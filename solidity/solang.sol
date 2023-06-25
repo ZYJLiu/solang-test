@@ -67,6 +67,22 @@ contract solang {
         SystemInstruction.create_account(payer, mint, 1461600, 82, address"TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
         SplToken.initialize_mint(mint, mintAuthority, freezeAuthority, decimals);
     }
+
+    function initialize_mint_pda(address payer, address mint, address mintAuthority, address freezeAuthority, uint8 decimals, bytes bump) public  {
+        create_account_pda(payer, mint, bump);
+        SplToken.initialize_mint(mint, mintAuthority, freezeAuthority, decimals);
+    }
+
+    function create_account_pda(address from, address to, bytes bump) internal view{
+        AccountMeta[2] metas = [
+            AccountMeta({pubkey: from, is_signer: true, is_writable: true}),
+            AccountMeta({pubkey: to, is_signer: true, is_writable: true})
+        ];
+
+        bytes bincode = abi.encode(uint32(0), uint64(1461600), uint64(82), address"TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
+
+        address"11111111111111111111111111111111".call{accounts: metas, seeds: [["mint", bump]]}(bincode);
+    }
 }
 
 
