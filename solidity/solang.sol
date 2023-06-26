@@ -17,7 +17,7 @@ contract solang {
     @seed(abi.encode(payer))
     @bump(bump)
     constructor(address payer, bytes1 bump) {
-        require(!isInitialzed, "Already initialized");
+        require(isInitialzed != true, "Already initialized");
         isInitialzed = true;
         creator = payer;
         print("Payer address: {:}".format(payer));
@@ -69,6 +69,9 @@ contract solang {
     }
 
     function initialize_mint_pda(address payer, address mint, address mintAuthority, address freezeAuthority, uint8 decimals, bytes bump) public  {
+        (address pda, bytes1 pdaBump) = try_find_program_address(["mint"], address"7FWiaEs5nGW8hnHcnFNoNkZGEXLiHHzh29fZZLzEBqsh");
+        require(pda == mint, "Incorrect PDA");
+        require(pdaBump == bump, "Incorrect Bump");
         create_mint_account_pda(payer, mint, bump);
         SplToken.initialize_mint(mint, mintAuthority, freezeAuthority, decimals);
     }
@@ -90,6 +93,9 @@ contract solang {
     }
 
     function initialize_account_pda(address payer, address tokenAccount, address mint, address owner, bytes bump) public  {
+        (address pda, bytes1 pdaBump) = try_find_program_address(["token"], address"7FWiaEs5nGW8hnHcnFNoNkZGEXLiHHzh29fZZLzEBqsh");
+        require(pda == tokenAccount, "Incorrect PDA");
+        require(pdaBump == bump, "Incorrect Bump");
         create_token_account_pda(payer, tokenAccount, bump);
         SplToken.initialize_account(tokenAccount, mint, owner);
     }

@@ -58,6 +58,33 @@ describe("solang", () => {
     console.log("state", val)
   })
 
+  it("Is initialized!", async () => {
+    const tx = await program.methods
+      .new(wallet.publicKey, Array.from(Buffer.from([bump])))
+      .accounts({ dataAccount: pda })
+      .rpc({ skipPreflight: true })
+    console.log("Your transaction signature", tx)
+
+    const val = await program.methods
+      .get()
+      .accounts({ dataAccount: pda })
+      .view()
+
+    console.log("state", val)
+  })
+
+  it("Flip", async () => {
+    const tx = await program.methods.flip().accounts({ dataAccount: pda }).rpc()
+    console.log("Your transaction signature", tx)
+
+    const val = await program.methods
+      .get()
+      .accounts({ dataAccount: pda })
+      .view()
+
+    console.log("state", val)
+  })
+
   it("Increment", async () => {
     const tx = await program.methods
       .increment()
@@ -231,11 +258,6 @@ describe("solang", () => {
         isWritable: true,
         isSigner: true,
       },
-      // {
-      //   pubkey: program.programId,
-      //   isWritable: false,
-      //   isSigner: false,
-      // },
     ]
 
     const tx = await program.methods

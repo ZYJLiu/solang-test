@@ -59,21 +59,21 @@ export default function FetchState() {
   //     program.programId
   //   )
 
-  //   // 17 bytes of data, last byte is the flip bool state
-  //   connection.getAccountInfo(pda).then((accountInfo) => {
-  //     if (accountInfo) {
-  //       setState(accountInfo.data[16] === 1 ? "True" : "False")
-  //       console.log(accountInfo.data)
-  //     }
-  //   })
+  //   // // 17 bytes of data, last byte is the flip bool state
+  //   // connection.getAccountInfo(pda).then((accountInfo) => {
+  //   //   if (accountInfo) {
+  //   //     setBool(accountInfo.data[16] === 1 ? "True" : "False")
+  //   //     console.log(accountInfo.data)
+  //   //   }
+  //   // })
 
-  //   // // Doesn't work in browser
-  //   // const val = await program.methods
-  //   //   .get()
-  //   //   .accounts({ dataAccount: pda })
-  //   //   .view()
+  //   // Doesn't work in browser
+  //   const val = await program.methods
+  //     .get()
+  //     .accounts({ dataAccount: pda })
+  //     .view()
 
-  //   // console.log("state", val)
+  //   console.log("state", val)
 
   //   // Can't use because not in IDL, and don't know discriminator for account type
   //   // const val = await program.account.dataAccount.fetch(pda)
@@ -85,7 +85,7 @@ export default function FetchState() {
       <Text>{bool}</Text>
       <Text>{number}</Text>
       <Text>{address}</Text>
-      <Text>{buffer}</Text>
+      {/* <Text>{buffer}</Text> */}
     </VStack>
   )
 }
