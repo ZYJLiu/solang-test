@@ -7,6 +7,7 @@ import 'solana';
 
 library SplToken {
 	address constant tokenProgramId = address"TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
+    address constant rentAddress = address"SysvarRent111111111111111111111111111111111";
 
 	enum TokenInstruction {
 		InitializeMint, // 0
@@ -41,6 +42,20 @@ library SplToken {
 		Reallocate, // 29
 		MemoTransferExtension, // 30
 		CreateNativeMint // 31
+	}
+
+	function initialize_account(address tokenAccount, address mint, address owner) internal {
+		bytes instr = new bytes(1);
+
+		instr[0] = uint8(TokenInstruction.InitializeAccount);
+		AccountMeta[4] metas = [
+			AccountMeta({pubkey: tokenAccount, is_writable: true, is_signer: false}),
+			AccountMeta({pubkey: mint, is_writable: false, is_signer: false}),
+			AccountMeta({pubkey: owner, is_writable: false, is_signer: false}),
+			AccountMeta({pubkey: rentAddress, is_writable: false, is_signer: false})
+		];
+
+		tokenProgramId.call{accounts: metas}(instr);
 	}
 
 	struct InitializeMintInstruction {

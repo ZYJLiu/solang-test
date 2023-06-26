@@ -11,6 +11,8 @@ import {
   MINT_SIZE,
   getMinimumBalanceForRentExemptMint,
   getMint,
+  getMinimumBalanceForRentExemptAccount,
+  ACCOUNT_SIZE,
 } from "@solana/spl-token"
 
 describe("solang", () => {
@@ -26,6 +28,8 @@ describe("solang", () => {
     [Buffer.from("seed"), wallet.publicKey.toBuffer()],
     program.programId
   )
+
+  const mint = Keypair.generate()
 
   it("Is initialized!", async () => {
     const tx = await program.methods
@@ -70,41 +74,41 @@ describe("solang", () => {
     console.log("Your transaction signature", tx)
   })
 
-  it("CPI Increment Anchor Counter ", async () => {
-    const counterProgramId = new PublicKey(
-      "ALeaCzuJpZpoCgTxMjJbNjREVqSwuvYFRZUfc151AKHU"
-    )
+  // it("CPI Increment Anchor Counter ", async () => {
+  //   const counterProgramId = new PublicKey(
+  //     "ALeaCzuJpZpoCgTxMjJbNjREVqSwuvYFRZUfc151AKHU"
+  //   )
 
-    const [counterAccount] = anchor.web3.PublicKey.findProgramAddressSync(
-      [Buffer.from("counter")],
-      counterProgramId
-    )
+  //   const [counterAccount] = anchor.web3.PublicKey.findProgramAddressSync(
+  //     [Buffer.from("counter")],
+  //     counterProgramId
+  //   )
 
-    const remainingAccounts: AccountMeta[] = [
-      {
-        pubkey: counterProgramId,
-        isWritable: false,
-        isSigner: false,
-      },
-      {
-        pubkey: counterAccount,
-        isWritable: true,
-        isSigner: false,
-      },
-      {
-        pubkey: wallet.publicKey,
-        isWritable: true,
-        isSigner: true,
-      },
-    ]
+  //   const remainingAccounts: AccountMeta[] = [
+  //     {
+  //       pubkey: counterProgramId,
+  //       isWritable: false,
+  //       isSigner: false,
+  //     },
+  //     {
+  //       pubkey: counterAccount,
+  //       isWritable: true,
+  //       isSigner: false,
+  //     },
+  //     {
+  //       pubkey: wallet.publicKey,
+  //       isWritable: true,
+  //       isSigner: true,
+  //     },
+  //   ]
 
-    const tx = await program.methods
-      .cpi(counterAccount, wallet.publicKey)
-      .accounts({ dataAccount: pda })
-      .remainingAccounts(remainingAccounts)
-      .rpc()
-    console.log("Your transaction signature", tx)
-  })
+  //   const tx = await program.methods
+  //     .cpi(counterAccount, wallet.publicKey)
+  //     .accounts({ dataAccount: pda })
+  //     .remainingAccounts(remainingAccounts)
+  //     .rpc()
+  //   console.log("Your transaction signature", tx)
+  // })
 
   it("SPL Token Transfer ", async () => {
     const mint = await createMint(
@@ -166,14 +170,17 @@ describe("solang", () => {
     console.log("Your transaction signature", tx)
 
     const tokenAccount = await getAccount(connection, to_token_account.address)
-    console.log(tokenAccount.amount.toString())
+    // console.log(tokenAccount.amount.toString())
   })
 
   it("Initialize Mint via CPI in program", async () => {
-    const mint = Keypair.generate()
     const lamport = await getMinimumBalanceForRentExemptMint(connection)
     console.log("Mint Account Space:", MINT_SIZE)
     console.log("Mint Account Lamports:", lamport)
+
+    const lamport2 = await getMinimumBalanceForRentExemptAccount(connection)
+    console.log("Token Account Space:", ACCOUNT_SIZE)
+    console.log("Token Account Lamports:", lamport2)
 
     const remainingAccounts: AccountMeta[] = [
       {
@@ -203,7 +210,8 @@ describe("solang", () => {
     console.log("Your transaction signature", tx)
 
     const mintAccount = await getMint(connection, mint.publicKey)
-    console.log(mintAccount)
+    console.log(mintAccount.mintAuthority.toBase58())
+    console.log(mintAccount.supply.toString())
   })
 
   it("Initialize Mint via CPI in program using PDA", async () => {
@@ -223,11 +231,11 @@ describe("solang", () => {
         isWritable: true,
         isSigner: true,
       },
-      {
-        pubkey: program.programId,
-        isWritable: false,
-        isSigner: false,
-      },
+      // {
+      //   pubkey: program.programId,
+      //   isWritable: false,
+      //   isSigner: false,
+      // },
     ]
 
     const tx = await program.methods
@@ -245,6 +253,101 @@ describe("solang", () => {
     console.log("Your transaction signature", tx)
 
     const mintAccount = await getMint(connection, mint)
-    console.log(mintAccount)
+    console.log(mintAccount.mintAuthority.toBase58())
+    console.log(mintAccount.supply.toString())
+  })
+
+  it("Initialize Token Account via CPI in program", async () => {
+    const tokenAccount = Keypair.generate()
+
+    const remainingAccounts: AccountMeta[] = [
+      {
+        pubkey: tokenAccount.publicKey,
+        isWritable: true,
+        isSigner: true,
+      },
+      {
+        pubkey: mint.publicKey,
+        isWritable: false,
+        isSigner: false,
+      },
+      {
+        pubkey: wallet.publicKey,
+        isWritable: true,
+        isSigner: true,
+      },
+      {
+        pubkey: anchor.web3.SYSVAR_RENT_PUBKEY,
+        isWritable: false,
+        isSigner: false,
+      },
+    ]
+
+    const tx = await program.methods
+      .initializeAccount(
+        wallet.publicKey, // payer
+        tokenAccount.publicKey, // token account to initialize
+        mint.publicKey, // mint address for token account
+        wallet.publicKey // owner
+      )
+      .accounts({ dataAccount: pda })
+      .remainingAccounts(remainingAccounts)
+      .signers([tokenAccount])
+      .rpc({ skipPreflight: true })
+    console.log("Your transaction signature", tx)
+
+    const tokenAccountData = await getAccount(
+      connection,
+      tokenAccount.publicKey
+    )
+    console.log(tokenAccountData.owner.toBase58())
+    console.log(tokenAccountData.amount.toString())
+  })
+
+  it("Initialize Token Account via CPI in program using PDA", async () => {
+    const [tokenAccount, bump] = PublicKey.findProgramAddressSync(
+      [Buffer.from("token")],
+      program.programId
+    )
+
+    const remainingAccounts: AccountMeta[] = [
+      {
+        pubkey: tokenAccount,
+        isWritable: true,
+        isSigner: false,
+      },
+      {
+        pubkey: mint.publicKey,
+        isWritable: false,
+        isSigner: false,
+      },
+      {
+        pubkey: wallet.publicKey,
+        isWritable: true,
+        isSigner: true,
+      },
+      {
+        pubkey: anchor.web3.SYSVAR_RENT_PUBKEY,
+        isWritable: false,
+        isSigner: false,
+      },
+    ]
+
+    const tx = await program.methods
+      .initializeAccountPda(
+        wallet.publicKey, // payer
+        tokenAccount, // token account to initialize
+        mint.publicKey, // mint address for token account
+        tokenAccount, // owner
+        Buffer.from([bump])
+      )
+      .accounts({ dataAccount: pda })
+      .remainingAccounts(remainingAccounts)
+      .rpc({ skipPreflight: true })
+    console.log("Your transaction signature", tx)
+
+    const tokenAccountData = await getAccount(connection, tokenAccount)
+    console.log(tokenAccountData.owner.toBase58())
+    console.log(tokenAccountData.amount.toString())
   })
 })
