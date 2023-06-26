@@ -3,7 +3,50 @@ import { AccountInfo, PublicKey } from "@solana/web3.js"
 import { useConnection, useWallet } from "@solana/wallet-adapter-react"
 import { solangProgram as program } from "@/utils/setup"
 import { useEffect, useState } from "react"
+import { struct, bool, u32, publicKey } from "@coral-xyz/borsh"
 
+// This is the schema for the account data is incorrect
+// Should be 38 bytes, but accountInfo.data is 56 bytes
+class MyBufferSchema {
+  isInitialized: boolean
+  value: boolean
+  number: number
+  creator: Uint8Array
+
+  constructor(
+    isInitialized: boolean,
+    value: boolean,
+    number: number,
+    creator: Uint8Array
+  ) {
+    this.isInitialized = isInitialized
+    this.value = value
+    this.number = number
+    this.creator = creator
+  }
+
+  static borshAccountSchema = struct([
+    bool("isInitialized"),
+    bool("value"),
+    u32("number"),
+    publicKey("creator"),
+  ])
+
+  static deserialize(buffer?: Buffer): MyBufferSchema | null {
+    if (!buffer) {
+      return null
+    }
+
+    try {
+      const { isInitialized, value, number, creator } =
+        this.borshAccountSchema.decode(buffer)
+      return new MyBufferSchema(isInitialized, value, number, creator)
+    } catch (error) {
+      console.log("Deserialization error:", error)
+      return null
+    }
+  }
+}
 // Fetch the account state
 export default function FetchState() {
   const { publicKey } = useWallet()
@@ -22,14 +65,13 @@ export default function FetchState() {
     )
 
     const updateState = (accountInfo: AccountInfo<Buffer>) => {
-      const dataBuffer = accountInfo.data.buffer
-      const dataView = new DataView(dataBuffer)
-      const uint8Array = new Uint8Array(dataBuffer)
+      // console.log(accountInfo.data)
+      const offsetBuffer = accountInfo.data.slice(18)
+      const myBuffer = MyBufferSchema.deserialize(offsetBuffer)
 
-      console.log(accountInfo.data)
-      setBool(dataView.getUint8(17) === 1 ? "True" : "False")
-      setNumber(dataView.getUint8(20))
-      setAddress(new PublicKey(uint8Array.slice(24)).toBase58())
+      setBool(myBuffer?.value ? "True" : "False")
+      setNumber(myBuffer?.number || 0)
+      setAddress(myBuffer?.creator.toString() || "")
       setBuffer(Array.from(accountInfo.data).join(", "))
     }
 
@@ -48,6 +90,19 @@ export default function FetchState() {
     return () => {
       // Unsubscribe from the account change subscription when the component unmounts
       connection.removeAccountChangeListener(subscriptionId)
+    }
+  }, [publicKey])
+
+  useEffect(() => {
+    const listenerId = program.addEventListener(
+      "Flipped",
+      async (event, slot, signature) => {
+        console.log(event)
+      }
+    )
+
+    return () => {
+      program.removeEventListener(listenerId)
     }
   }, [publicKey])
 
@@ -85,7 +140,7 @@ export default function FetchState() {
       <Text>{bool}</Text>
       <Text>{number}</Text>
       <Text>{address}</Text>
-      {/* <Text>{buffer}</Text> */}
+      <Text>{buffer}</Text>
     </VStack>
   )
 }
